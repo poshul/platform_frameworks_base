@@ -563,12 +563,14 @@ public class ClipboardService extends SystemService {
                         UserHandle.getUserId(callingUid))) {
                 if (SystemProperties.getBoolean("persist.security.bg_clipboard", false)) {
                     return true;
-                } else {
-                    Slog.w(TAG, "denied background clipboard access for " + callingPackage);
                 }
             }
             // Instant apps can only access the clipboard if they are in the foreground.
-            return mAm.isAppForeground(callingUid);
+            boolean foreground = mAm.isAppForeground(callingUid);
+            if (!foreground) {
+                Slog.w(TAG, "denied background clipboard access for " + callingPackage);
+            }
+            return foreground;
         } catch (RemoteException e) {
             Slog.e("clipboard", "Failed to get Instant App status for package " + callingPackage,
                     e);
